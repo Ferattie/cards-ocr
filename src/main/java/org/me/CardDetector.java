@@ -1,11 +1,18 @@
 package org.me;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+@Component
 public class CardDetector {
 
     private static class Holder {
@@ -26,24 +33,22 @@ public class CardDetector {
         }
     }
 
-    private static final CardDetector INSTANCE = new CardDetector();
+    private final List<Holder> templates;
 
-    private final Holder[] templates;
+    public CardDetector(ApplicationContext context) throws IOException {
 
-    private CardDetector() {
-        File[] files = getResourceFolderFiles("templates");
-        templates = new Holder[files.length];
-        for (int i = 0; i < files.length; i++) {
+        Resource[] files = context.getResources("templates/*.png");
+
+        templates = Arrays.stream(files).map(resource -> {
             try {
-                templates[i] = new Holder(files[i].getName(), ImageIO.read(files[i]));
+                String filename = resource.getFilename();
+                InputStream in = resource.getInputStream();
+                return new Holder(filename, ImageIO.read(in));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public static CardDetector getInstance() {
-        return INSTANCE;
+            return null;
+        }).collect(Collectors.toList());
     }
 
     public String detect(BufferedImage origin) {
@@ -92,10 +97,4 @@ public class CardDetector {
         return result;
     }
 
-    private static File[] getResourceFolderFiles (String folder) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        URL url = loader.getResource(folder);
-        String path = url.getPath();
-        return new File(path).listFiles();
-    }
 }

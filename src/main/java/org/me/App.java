@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.util.FileSystemUtils;
 
+import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -27,7 +28,8 @@ public class App implements ApplicationRunner {
     private boolean debug = false;
     private Path debugFolder = null;
 
-    private final CardDetector cardDetector = CardDetector.getInstance();
+    @Resource
+    private CardDetector cardDetector;
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
@@ -37,18 +39,18 @@ public class App implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         List<String> nonOptionalArgs = args.getNonOptionArgs();
         if (nonOptionalArgs.isEmpty()) {
-            LOG.error("A source folder doesn't specified.");
+            System.out.println("A source folder doesn't specified.");
             return;
         }
 
         File path = new File(nonOptionalArgs.get(0));
         if (!path.exists()) {
-            LOG.error("The specified source folder \"{}\" doesn't exists.", path.getPath());
+            System.out.println("The specified source folder \"" + path.getPath() + "\" doesn't exists.");
             return;
         }
 
         if (!path.isDirectory()) {
-            LOG.error("The specified source folder \"{}\" is not a directory", path.getPath());
+            System.out.println("The specified source folder \"" + path.getPath() + "\" is not a directory");
             return;
         }
 
